@@ -8,3 +8,6 @@ fi
 
 # run app with gunicorn (adjust module name if run:app vs wsgi)
 exec gunicorn --bind :8080 --workers 2 run:app
+
+#!/bin/sh
+python run.py
