@@ -31,8 +31,10 @@ jobs:
       # ------------------------------------
       - name: Init SQLite for tests
         run: |
+          export PYTHONPATH="${PYTHONPATH}:$(pwd)"
           mkdir -p instance
           python ci/create_users_db.py
+
 
       # ------------------------------------
       # FIX 2: Download MODELS for CI tests
