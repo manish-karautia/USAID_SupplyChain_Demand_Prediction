@@ -26,19 +26,18 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      # ------------------------------------
-      # FIX 1: Create instance/users.db for CI
-      # ------------------------------------
+      # -----------------------------------
+      # Create instance folder + users.db
+      # -----------------------------------
       - name: Init SQLite for tests
         run: |
           export PYTHONPATH="${PYTHONPATH}:$(pwd)"
           mkdir -p instance
           python ci/create_users_db.py
 
-
-      # ------------------------------------
-      # FIX 2: Download MODELS for CI tests
-      # ------------------------------------
+      # -----------------------------------
+      # Download ML MODELS for CI
+      # -----------------------------------
       - name: Write GCP key
         run: |
           echo "${{ secrets.GCP_CREDENTIALS }}" > gcp_key.json
@@ -50,17 +49,20 @@ jobs:
       - name: Download models into app/models
         run: |
           mkdir -p app/models
-          gsutil cp gs://${{ secrets.GCS_MODELS_BUCKET }}/* app/models/ || true
+          gsutil cp gs://${{ secrets.GCS_MODELS_BUCKET }}/models/* app/models/ || true
           ls -la app/models
 
-      # ------------------------------------
-      # FIX 3: Run pytest with correct PATH
-      # ------------------------------------
+      # -----------------------------------
+      # RUN TESTS
+      # -----------------------------------
       - name: Run unit tests
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: pytest -q
 
+  # ---------------------------------------------------
+  # BUILD & PUSH DOCKER IMAGE TO DOCKERHUB
+  # ---------------------------------------------------
   build-and-push:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -78,11 +80,10 @@ jobs:
           project_id: bulerez786
           export_default_credentials: true
 
-      # Optional — bake models inside Docker image
       - name: Download models from GCS
         run: |
           mkdir -p app/models
-          gsutil -m cp gs://${{ secrets.GCS_MODELS_BUCKET }}/* app/models/ || true
+          gsutil cp gs://${{ secrets.GCS_MODELS_BUCKET }}/models/* app/models/ || true
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -98,6 +99,9 @@ jobs:
           push: true
           tags: ${{ env.IMAGE }}:latest
 
+  # ---------------------------------------------------
+  # DEPLOY TO CLOUD RUN
+  # ---------------------------------------------------
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
