@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, UserMixin
-from . import db
+from app.database import db, User
 from . import login_manager
 from datetime import datetime
 
@@ -15,12 +15,13 @@ class Prediction(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-class User(UserMixin, db.Model):
+"""class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True)
     password = db.Column(db.String(150))
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     predictions = db.relationship('Prediction', backref='user', lazy=True)
+"""
 
 @login_manager.user_loader
 def load_user(user_id):
